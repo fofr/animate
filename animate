@@ -24,18 +24,22 @@ def animate(
     decoding_t=14,
     seed=None,
 ):
+    input_dict = {
+        "input_image": open(input_image, "rb"),
+        "video_length": video_length,
+        "sizing_strategy": sizing_strategy,
+        "frames_per_second": frames_per_second,
+        "motion_bucket_id": motion_bucket_id,
+        "cond_aug": cond_aug,
+        "decoding_t": decoding_t,
+    }
+
+    if seed is not None and seed > 0:
+        input_dict["seed"] = seed
+
     output = replicate.run(
         f"{MODEL_USER}/{MODEL_NAME}:{VERSION}",
-        input={
-            "input_image": open(input_image, "rb"),
-            "video_length": video_length,
-            "sizing_strategy": sizing_strategy,
-            "frames_per_second": frames_per_second,
-            "motion_bucket_id": motion_bucket_id,
-            "cond_aug": cond_aug,
-            "decoding_t": decoding_t,
-            "seed": seed,
-        },
+        input=input_dict,
     )
     return output
 
@@ -88,9 +92,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description="Animate an image.")
-    parser.add_argument(
-        "input_image", type=str, help="Input image"
-    )
+    parser.add_argument("input_image", type=str, help="Input image")
     parser.add_argument(
         "--video_length",
         type=str,
