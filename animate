@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+
+__version__ = "0.0.1"
+
+import os
+import sys
+import time
+import replicate
+import argparse
+from urllib.request import urlretrieve
+
+MODEL_USER = "stability-ai"
+MODEL_NAME = "stable-video-diffusion"
+VERSION = "3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172438"
+
+
+def animate(
+    input_image,
+    video_length="14_frames_with_svd",
+    sizing_strategy="maintain_aspect_ratio",
+    frames_per_second=6,
+    motion_bucket_id=27,
+    cond_aug=0.02,
+    decoding_t=14,
+    seed=None,
+):
+    output = replicate.run(
+        f"{MODEL_USER}/{MODEL_NAME}:{VERSION}",
+        input={
+            "input_image": open(input_image, "rb"),
+            "video_length": video_length,
+            "sizing_strategy": sizing_strategy,
+            "frames_per_second": frames_per_second,
+            "motion_bucket_id": motion_bucket_id,
+            "cond_aug": cond_aug,
+            "decoding_t": decoding_t,
+            "seed": seed,
+        },
+    )
+    return output
+
+
+def main(
+    input_image,
+    video_length,
+    sizing_strategy,
+    frames_per_second,
+    motion_bucket_id,
+    cond_aug,
+    decoding_t,
+    seed,
+    output_file_path=None,
+):
+    start_time = time.time()
+    file_name = os.path.splitext(input_image)[0]
+    output_file_path = output_file_path or f"{file_name}-animated.mp4"
+
+    if os.path.exists(output_file_path):
+        print(f"Skipping {input_image} as animated version already exists")
+        return
+
+    print("View your running predictions at: https://replicate.com/predictions")
+    print(f"Output will be saved to {output_file_path}")
+    print(f"Animating {input_image}...")
+    output = animate(
+        input_image,
+        video_length,
+        sizing_strategy,
+        frames_per_second,
+        motion_bucket_id,
+        cond_aug,
+        decoding_t,
+        seed,
+    )
+
+    urlretrieve(output[0], output_file_path)
+    print(f"Animated in {time.time() - start_time:.2f} seconds")
+    print(f"Saved to {output_file_path}")
+
+
+if __name__ == "__main__":
+    if "REPLICATE_API_TOKEN" not in os.environ:
+        print("Error: REPLICATE_API_TOKEN environment variable is not set.")
+        print(
+            "Get your API token from https://replicate.com/account/api-tokens and run:"
+        )
+        print("export REPLICATE_API_TOKEN=<token>")
+        sys.exit(1)
+
+    parser = argparse.ArgumentParser(description="Animate an image.")
+    parser.add_argument(
+        "input_image", type=str, help="Input image"
+    )
+    parser.add_argument(
+        "--video_length",
+        type=str,
+        choices=["14_frames_with_svd", "25_frames_with_svd_xt"],
+        default="14_frames_with_svd",
+        help="Use svd to generate 14 frames or svd_xt for 25 frames",
+    )
+    parser.add_argument(
+        "--sizing_strategy",
+        type=str,
+        choices=["maintain_aspect_ratio", "crop_to_16_9", "use_image_dimensions"],
+        default="maintain_aspect_ratio",
+        help="Decide how to resize the input image",
+    )
+    parser.add_argument(
+        "--frames_per_second",
+        type=int,
+        default=6,
+        help="Frames per second",
+    )
+    parser.add_argument(
+        "--motion_bucket_id",
+        type=int,
+        default=27,
+        help="Increase overall motion in the generated video",
+    )
+    parser.add_argument(
+        "--cond_aug",
+        type=float,
+        default=0.02,
+        help="Amount of noise to add to input image",
+    )
+    parser.add_argument(
+        "--decoding_t",
+        type=int,
+        default=14,
+        help="Number of frames to decode at a time",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Random seed. Leave blank to randomize the seed",
+    )
+    parser.add_argument(
+        "--output_file_path",
+        type=str,
+        default=None,
+    )
+    args = parser.parse_args()
+    main(
+        args.input_image,
+        args.video_length,
+        args.sizing_strategy,
+        args.frames_per_second,
+        args.motion_bucket_id,
+        args.cond_aug,
+        args.decoding_t,
+        args.seed,
+        args.output_file_path,
+    )
