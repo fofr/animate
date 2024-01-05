@@ -68,7 +68,7 @@ def main(
     print("View your running predictions at: https://replicate.com/predictions")
     print(f"Output will be saved to {output_file_path}")
     print(f"Animating {input_image}...")
-    output = animate(
+    output_url = animate(
         input_image,
         video_length,
         sizing_strategy,
@@ -79,7 +79,7 @@ def main(
         seed,
     )
 
-    urlretrieve(output[0], output_file_path)
+    urlretrieve(output_url, output_file_path)
     print(f"Animated in {time.time() - start_time:.2f} seconds")
     print(f"Saved to {output_file_path}")
 
