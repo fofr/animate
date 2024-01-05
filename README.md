@@ -44,6 +44,18 @@ A local video animator using Replicate and stable-video-diffusion. Non-commercia
    source ~/.bashrc
    ```
 
+5. You can also add this as a Finder quick action, using the following AppleScript:
+
+   ```applescript
+   on run {input, parameters}
+       repeat with aFile in input
+           set file_path to POSIX path of (aFile as alias)
+           do shell script "export REPLICATE_API_TOKEN=<your_token>; /path/to/python /path/to/animate " & quoted form of file_path
+       end repeat
+       return input
+   end run
+   ```
+
 You can also specify additional parameters such as `video_length`, `sizing_strategy`, `frames_per_second`, `motion_bucket_id`, `cond_aug`, `decoding_t`, and `seed`. For example:
 
 ```sh
