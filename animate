@@ -59,9 +59,11 @@ def main(
     file_name = os.path.splitext(input_image)[0]
     output_file_path = output_file_path or f"{file_name}-animated.mp4"
 
-    if os.path.exists(output_file_path):
-        print(f"Skipping {input_image} as animated version already exists")
-        return
+    counter = 1
+    while os.path.exists(output_file_path):
+        base_name, ext = os.path.splitext(output_file_path)
+        output_file_path = f"{base_name}-{str(counter).zfill(3)}{ext}"
+        counter += 1
 
     print("View your running predictions at: https://replicate.com/predictions")
     print(f"Output will be saved to {output_file_path}")
